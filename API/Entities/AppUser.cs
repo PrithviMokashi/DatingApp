@@ -7,9 +7,12 @@ namespace API.Entities
 {
     public class AppUser
     {
-        //Used for Entity Framework, Id and UserName is format in Entity Framework
+        //Adds the data to sqlite database using Entity Framework
         public int Id { get; set; }
         public string UserName { get; set; }
         
+        public byte[] PasswardHash { get; set; }
+
+        public byte[] PasswordSalt { get; set; }
     }
 }
