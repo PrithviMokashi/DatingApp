@@ -12,7 +12,9 @@ namespace API.DTOs
     {
         [Required] //Used for validation
         public string Username { get; set; }
+
         [Required]
+        [StringLength(8, MinimumLength = 4)]//Length of Password
         public string Password { get; set; }
 
     }
