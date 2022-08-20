@@ -1,26 +1,25 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using API.Errors;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace API.Middleware
 {
     public class ExceptionMiddleware
     {
-        public RequestDelegate Next { get; }
-        private readonly ILogger<ExceptionMiddleware> _logger;
         private readonly RequestDelegate _next;
+        private readonly ILogger<ExceptionMiddleware> _logger;
         private readonly IHostEnvironment _env;
-        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger,
+        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger, 
             IHostEnvironment env)
         {
             _env = env;
-            _next = next;
             _logger = logger;
+            _next = next;
         }
 
         public async Task InvokeAsync(HttpContext context)
