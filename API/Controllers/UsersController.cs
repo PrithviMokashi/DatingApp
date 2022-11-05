@@ -22,6 +22,11 @@ namespace API.Controllers
             _userRepository = userRepository;
         }
 
+        internal static object GetUserId()
+        {
+            throw new NotImplementedException();
+        }
+
         //IEnumerable allows us to use simple iteration over a collection of specific type
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery]UserParams userParams)
