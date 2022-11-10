@@ -5,82 +5,67 @@ using API.Helpers;
 using API.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc; //Mvc is Model view controller
+using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
-      [Authorize]
+    [Authorize]
     public class UsersController : BaseApiController
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly IPhotoService _photoService;
-        public UsersController(IUserRepository userRepository, IMapper mapper, IPhotoService photoService)
+        public UsersController(IUserRepository userRepository, IMapper mapper, 
+            IPhotoService photoService)
         {
             _photoService = photoService;
             _mapper = mapper;
             _userRepository = userRepository;
         }
 
-        internal static object GetUserId()
-        {
-            throw new NotImplementedException();
-        }
-
-        //IEnumerable allows us to use simple iteration over a collection of specific type
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery]UserParams userParams)
         {
             var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
-            userParams.CurrentUsername = User.GetUsername();
+            userParams.CurrentUsername = user.UserName;
 
-            if (string.IsNullOrEmpty(userParams.Gender)) {
+            if (string.IsNullOrEmpty(userParams.Gender))
                 userParams.Gender = user.Gender == "male" ? "female" : "male";
-            }
 
-            //Variable to store users
-            //Returning list of users Asynchronously 
             var users = await _userRepository.GetMembersAsync(userParams);
 
             Response.AddPaginationHeader(users.CurrentPage, users.PageSize, 
                 users.TotalCount, users.TotalPages);
 
-            return Ok(users);  
+            return Ok(users);
         }
 
-        //api/users/3 when user hits this endpoint these results are fetched
         [HttpGet("{username}", Name = "GetUser")]
         public async Task<ActionResult<MemberDto>> GetUser(string username)
         {
             return await _userRepository.GetMemberAsync(username);
         }
 
-
-        //Used to update a resource in our server
         [HttpPut]
         public async Task<ActionResult> UpdateUser(MemberUpdateDto memberUpdateDto)
         {
-            //Returns the users username from the token that API uses to authenticate
+
             var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
 
-            //Maps all the properties of memberUpdateDto to user
-            //Ex: user.City = memberUpdateDto.City
             _mapper.Map(memberUpdateDto, user);
 
-            //Flagged as being updated by entity framework we wont get exception or error
-            //when we come back from updating the user in database
             _userRepository.Update(user);
 
             if (await _userRepository.SaveAllAsync()) return NoContent();
 
             return BadRequest("Failed to update user");
-        } 
+        }
 
         [HttpPost("add-photo")]
         public async Task<ActionResult<PhotoDto>> AddPhoto(IFormFile file)
         {
             var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
-        
+
             var result = await _photoService.AddPhotoAsync(file);
 
             if (result.Error != null) return BadRequest(result.Error.Message);
@@ -100,26 +85,27 @@ namespace API.Controllers
 
             if (await _userRepository.SaveAllAsync())
             {
-                return CreatedAtRoute("GetUser", new {username = user.UserName}, _mapper.Map<PhotoDto>(photo));
+                return CreatedAtRoute("GetUser", new {username = user.UserName} ,_mapper.Map<PhotoDto>(photo));
             }
+                
 
-            return BadRequest("Problem adding photo");
+            return BadRequest("Problem addding photo");
         }
 
         [HttpPut("set-main-photo/{photoId}")]
-        public async Task<ActionResult> SetMainPhoto(int photoId) 
+        public async Task<ActionResult> SetMainPhoto(int photoId)
         {
             var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
 
             var photo = user.Photos.FirstOrDefault(x => x.Id == photoId);
 
-            //if (photo.IsMain) return BadRequest("This is already your main photo");
+            if (photo.IsMain) return BadRequest("This is already your main photo");
 
             var currentMain = user.Photos.FirstOrDefault(x => x.IsMain);
             if (currentMain != null) currentMain.IsMain = false;
             photo.IsMain = true;
 
-            if(await _userRepository.SaveAllAsync()) return NoContent();
+            if (await _userRepository.SaveAllAsync()) return NoContent();
 
             return BadRequest("Failed to set main photo");
         }
