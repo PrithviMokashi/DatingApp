@@ -17,8 +17,8 @@ import { MemberDetailedResolver } from './_resolvers/member-detailed.resolver';
 
 
 //This routes are user to redirect to other page
-//Ex: https://localhost:4200/members
-//Ex: https://localhost:4200/lists
+//Ex: https://src***/members
+//Ex: https://src***/lists
 //Routed in nav.component.html using routerLinks
 const routes: Routes = [
   {path: '', component: HomeComponent},
