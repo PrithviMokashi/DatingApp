@@ -1,13 +1,13 @@
 using API.Extensions;
-using API.Extentions;
 using API.Middleware;
-using Microsoft.OpenApi.Models;
+using API.SignalR;
 
 namespace API
 {
     public class Startup
     {
         private readonly IConfiguration _config;
+
         public Startup(IConfiguration config)
         {
             _config = config;
@@ -16,17 +16,11 @@ namespace API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //Extention for Application Services
             services.AddApplicationServices(_config);
             services.AddControllers();
             services.AddCors();
-            //Extention for Identity Services
             services.AddIdentityServices(_config);
-
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebAPIv5", Version = "v1" });
-            });
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -38,8 +32,10 @@ namespace API
 
             app.UseRouting();
 
-            //x is the policy used ie allow any header or method if it is from the specific origin
-            app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200"));
+            app.UseCors(x => x.AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials()
+                .WithOrigins("https://localhost:4200"));
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -47,6 +43,8 @@ namespace API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<PresenceHub>("hubs/presence");
+                endpoints.MapHub<MessageHub>("hubs/message");
             });
         }
     }
