@@ -35,7 +35,7 @@ namespace API
             app.UseCors(x => x.AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials()
-                .AllowAnyOrigin());
+                .WithOrigins("https://localhost:4200"));
 
             app.UseAuthentication();
             app.UseAuthorization();
